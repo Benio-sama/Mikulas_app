@@ -24,7 +24,7 @@ model Toy {
   id       Int      @id @unique @default(autoincrement())
   name     String
   material Material
-  weight   Int
+  weight   Decimal  @db.Decimal(10, 2)
   kid      Kid[]
 }
 

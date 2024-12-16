@@ -1,4 +1,4 @@
-import { IsDefined, IsInt, IsString } from "class-validator";
+import { IsBoolean, IsDefined, IsInt, IsString } from "class-validator";
 
 export class CreateKidDto {
     @IsDefined()
@@ -11,9 +11,9 @@ export class CreateKidDto {
 
     @IsDefined()
     @IsString()
-    adress: string;
+    address: string;
 
     @IsDefined()
-    @IsInt()
+    @IsBoolean()
     isgood: boolean;
 }

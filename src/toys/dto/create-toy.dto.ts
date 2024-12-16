@@ -1,5 +1,5 @@
 import { Material } from "@prisma/client";
-import { IsDefined, IsEnum, IsInt, IsString } from "class-validator";
+import { IsDecimal, IsDefined, IsEnum, IsInt, IsNumber, IsString } from "class-validator";
 
 export class CreateToyDto {
     @IsDefined()
@@ -11,6 +11,6 @@ export class CreateToyDto {
     material: Material;
 
     @IsDefined()
-    @IsInt()
+    @IsNumber()
     weight: number;
 }

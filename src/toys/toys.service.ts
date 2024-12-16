@@ -8,26 +8,59 @@ export class ToysService {
   constructor(private db: PrismaService) { }
 
   create(createToyDto: CreateToyDto) {
-    return this.db.toy.create({
-      data: createToyDto,
-    })
+    try {
+      return this.db.toy.create({
+        data: createToyDto,
+      })
+    } catch (error) {
+      return "invalid data";
+    }
   }
 
   findAll() {
-    return this.db.toy.findMany();
-  }
-
-  findOne(id: number) {
-    return this.db.toy.findUnique({
-      where: { id },
+    return this.db.toy.findMany({
+      include: {
+        kid: true
+      }
     });
   }
 
+  findOne(id: number) {
+    if (id == undefined || id == null || isNaN(id)) {
+      return "invalid id";
+    }
+    try {
+      return this.db.toy.findUnique({
+        where: { id },
+        include: {
+          kid: true
+        }
+      });
+    } catch (error) {
+      return "cannot find toy"
+    }
+  }
+
   update(id: number, updateToyDto: UpdateToyDto) {
-    return `This action updates a #${id} toy`;
+    if (id == undefined || id == null || isNaN(id)) {
+      return "invalid id";
+    }
+    try {
+      return this.db.toy.update({
+        where: { id },
+        data: updateToyDto,
+      });
+    } catch (error) {
+      return "invalid data";
+    }
   }
 
   remove(id: number) {
-    return `This action removes a #${id} toy`;
+    if (id == undefined || id == null || isNaN(id)) {
+      return "invalid id";
+    }
+    return this.db.toy.delete({
+      where: { id }
+    });
   }
 }
