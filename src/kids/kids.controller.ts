@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put, Res } from '@nestjs/common';
 import { KidsService } from './kids.service';
 import { CreateKidDto } from './dto/create-kid.dto';
 import { UpdateKidDto } from './dto/update-kid.dto';
 
-@Controller('kids')
+@Controller('children')
 export class KidsController {
   constructor(private readonly kidsService: KidsService) { }
 
@@ -18,11 +18,11 @@ export class KidsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.kidsService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.kidsService.findOne(+id);
   }
 
-  @Patch(':kidid/:toyid')
+  /*@Patch(':kidid/:toyid')
   modify(@Param('kidid') kidid: string, @Param('toyid') toyid: string, @Query('action') action: 'add' | 'remove') {
     if (action === 'add') {
       return this.kidsService.addtoy(+kidid, +toyid);
@@ -31,15 +31,25 @@ export class KidsController {
     } else {
       return 'invalid action! action must be add or remove';
     }
+  }*/
+
+  @Put(':kidid/toys/:toyid')
+  async addtoytokid(@Param('kidid') kidid: string, @Param('toyid') toyid: string) {
+    return await this.kidsService.addtoy(+kidid, +toyid);
+  }
+
+  @Delete(':kidid/toys/:toyid')
+  async removetoyfromkid(@Param('kidid') kidid: string, @Param('toyid') toyid: string) {
+    return await this.kidsService.removetoy(+kidid, +toyid);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateKidDto: UpdateKidDto) {
-    return this.kidsService.update(+id, updateKidDto);
+  async update(@Param('id') id: string, @Body() updateKidDto: UpdateKidDto) {
+    return await this.kidsService.update(+id, updateKidDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.kidsService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.kidsService.remove(+id);
   }
 }

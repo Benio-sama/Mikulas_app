@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { All, Injectable } from '@nestjs/common';
 import { CreateKidDto } from './dto/create-kid.dto';
 import { UpdateKidDto } from './dto/update-kid.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -12,7 +12,7 @@ export class KidsService {
         data: createKidDto,
       });
     } catch (error) {
-      return "invalid data";
+      return { "statusCode": 406, "message": "invalid data" }
     }
   }
 
@@ -24,44 +24,77 @@ export class KidsService {
     });
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     if (id == undefined || id == null || isNaN(id)) {
       return "invalid id";
     }
-    return this.db.kid.findUnique({
+    const kid = await this.db.kid.findUnique({
       where: { id },
       include: {
         toys: true
       }
     });
+    if (kid) {
+      return kid;
+    } else {
+      return { "statusCode": 404, "message": "cannot find kid" }
+    }
   }
 
-  addtoy(kidid: number, toyid: number) {
+  async addtoy(kidid: number, toyid: number) {
     if (kidid == undefined || kidid == null || isNaN(kidid) || toyid == undefined || toyid == null || isNaN(toyid)) {
       return "invalid ids";
     }
     try {
-      return this.db.kid.update({
+      const kid = await this.db.kid.findUnique({
         where: { id: kidid },
-        data: {
-          toys: {
-            connect: { id: toyid }
-          }
-        },
-        include: {
-          toys: true
-        }
       })
+      const toy = await this.db.toy.findUnique({
+        where: { id: toyid },
+      })
+      if (!kid) {
+        return { "statusCode": 404, "message": "cannot find kid" }
+      }
+      if (!toy) {
+        return { "statusCode": 404, "message": "cannot find toy" }
+      }
+      if (kid.isgood) {
+        return this.db.kid.update({
+          where: { id: kidid },
+          data: {
+            toys: {
+              connect: { id: toyid }
+            }
+          },
+          include: {
+            toys: true
+          }
+        })
+      } else {
+        return { "statusCode": 409, "message": "cant add toy to a bad kid" }
+      }
     } catch (error) {
-      return "couldnt add toy"
+      return { "statusCode": 406, "message": "couldnt add toy" }
     }
   }
 
-  removetoy(kidid: number, toyid: number) {
+  async removetoy(kidid: number, toyid: number) {
     if (kidid == undefined || kidid == null || isNaN(kidid) || toyid == undefined || toyid == null || isNaN(toyid)) {
       return "invalid ids";
     }
     try {
+      const kid = await this.db.kid.findUnique({
+        where: { id: kidid },
+      })
+      const toy = await this.db.toy.findUnique({
+        where: { id: toyid },
+      })
+      if (!kid) {
+        return { "statusCode": 404, "message": "cannot find kid" }
+      }
+      if (!toy) {
+        return { "statusCode": 404, "message": "cannot find toy" }
+      }
       return this.db.kid.update({
         where: { id: kidid },
         data: {
@@ -74,43 +107,63 @@ export class KidsService {
         }
       })
     } catch (error) {
-      return "couldnt remove toy"
+      return { "statusCode": 406, "message": "couldnt remove toy" }
     }
   }
 
-  update(id: number, updateKidDto: UpdateKidDto) {
+  async update(id: number, updateKidDto: UpdateKidDto) {
     if (id == undefined || id == null || isNaN(id)) {
       return "invalid id";
     }
     try {
-      if (updateKidDto.isgood == false) {
-        this.db.kid.update({
-          where: { id },
-          data: {
-            toys: {
-              disconnect: []
-            }
-          }
-        })
+      const kid = await this.db.kid.findUnique({
+        where: { id: id },
+        include: { toys: true }
+      })
+      if (!kid) {
+        return { "statusCode": 404, "message": "cant find kid" }
       }
-      return this.db.kid.update({
+      this.db.kid.update({
         where: { id },
         data: updateKidDto,
         include: {
           toys: true
         }
       });
+      if (kid.isgood == false) {
+        console.log("asd")
+        return this.db.kid.update({
+          where: { id },
+          data: {
+            toys: {
+              set: []
+            }
+          },
+          include: {
+            toys: true
+          }
+        })
+      } else {
+        return kid
+      }
     } catch (error) {
-      return "invalid data";
+      return { "statusCode": 406, "message": "invalid data" }
     }
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     if (id == undefined || id == null || isNaN(id)) {
       return "invalid id";
     }
-    return this.db.kid.delete({
-      where: { id },
-    });
+    const kid = await this.db.kid.findUnique({
+      where: { id: id },
+    })
+    if (kid) {
+      return this.db.kid.delete({
+        where: { id },
+      });
+    } else {
+      return { "statusCode": 404, "message": "cant find kid" }
+    }
   }
 }

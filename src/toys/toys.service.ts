@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateToyDto } from './dto/create-toy.dto';
 import { UpdateToyDto } from './dto/update-toy.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -13,7 +13,7 @@ export class ToysService {
         data: createToyDto,
       })
     } catch (error) {
-      return "invalid data";
+      return { "statusCode": 406, "message": "invalid data" }
     }
   }
 
@@ -25,42 +25,57 @@ export class ToysService {
     });
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     if (id == undefined || id == null || isNaN(id)) {
       return "invalid id";
     }
-    try {
-      return this.db.toy.findUnique({
-        where: { id },
-        include: {
-          kid: true
-        }
-      });
-    } catch (error) {
-      return "cannot find toy"
-    }
-  }
-
-  update(id: number, updateToyDto: UpdateToyDto) {
-    if (id == undefined || id == null || isNaN(id)) {
-      return "invalid id";
-    }
-    try {
-      return this.db.toy.update({
-        where: { id },
-        data: updateToyDto,
-      });
-    } catch (error) {
-      return "invalid data";
-    }
-  }
-
-  remove(id: number) {
-    if (id == undefined || id == null || isNaN(id)) {
-      return "invalid id";
-    }
-    return this.db.toy.delete({
-      where: { id }
+    const toy = await this.db.toy.findUnique({
+      where: { id },
+      include: {
+        kid: true
+      }
     });
+    if (toy) {
+      return toy;
+    } else {
+      return { "statusCode": 404, "message": "cannot find toy" }
+    }
+  }
+
+  async update(id: number, updateToyDto: UpdateToyDto) {
+    if (id == undefined || id == null || isNaN(id)) {
+      return "invalid id";
+    }
+    try {
+      const toy = await this.db.toy.findUnique({
+        where: { id },
+      })
+      if (toy) {
+        return this.db.toy.update({
+          where: { id },
+          data: updateToyDto,
+        });
+      } else {
+        return { "statusCode": 404, "message": "cannot find toy" }
+      }
+    } catch (error) {
+      return { "statusCode": 406, "message": "invalid data" }
+    }
+  }
+
+  async remove(id: number) {
+    if (id == undefined || id == null || isNaN(id)) {
+      return "invalid id";
+    }
+    const toy = await this.db.toy.findUnique({
+      where: { id },
+    });
+    if (toy) {
+      return this.db.toy.delete({
+        where: { id }
+      });
+    } else {
+      return { "statusCode": 404, "message": "cannot find toy" }
+    }
   }
 }
